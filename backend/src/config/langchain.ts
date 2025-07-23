@@ -81,8 +81,5 @@ Respond in JSON format:
 
 export const createValidationChain = () => {
   const llm = createOpenAIClient();
-  
-  return llm.bind({
-    systemMessage: validationPrompt
-  });
+  return llm;
 }; 

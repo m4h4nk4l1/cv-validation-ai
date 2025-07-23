@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -37,7 +37,7 @@ app.use('/trpc', createExpressMiddleware({
 }));
 
 // File upload endpoint
-app.post('/upload', upload.single('file'), async (req, res, next) => {
+app.post('/upload', upload.single('file'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.body.userId;
     const file = req.file;
@@ -59,7 +59,7 @@ app.post('/upload', upload.single('file'), async (req, res, next) => {
 });
 
 // Health check
-app.get('/health', (req, res) => {
+app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'ok' });
 });
 
