@@ -7,6 +7,20 @@ export class DatabaseService {
   async createUser(data: CreateUserRequest): Promise<Prisma.UserGetPayload<{ include: { skills: true } }>> {
     const { skills, ...userData } = data;
     
+    //checking if user already exists with this email
+    const existingUser = await prisma.user.findUnique({
+      where: { email: userData.email },
+      include: {
+        skills: true
+      }
+    });
+
+    if (existingUser) {
+      //return existing user if found
+      return existingUser;
+    }
+
+    //create new user if not found
     return await prisma.user.create({
       data: {
         ...userData,
@@ -43,7 +57,7 @@ export class DatabaseService {
   async updateUser(id: string, data: UpdateUserRequest): Promise<Prisma.UserGetPayload<{ include: { skills: true } }>> {
     const { skills, ...userData } = data;
     
-    // Delete existing skills if new ones provided
+    //delete existing skills if new ones provided
     if (skills !== undefined) {
       await prisma.userSkill.deleteMany({
         where: { userId: id }

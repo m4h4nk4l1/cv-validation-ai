@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: cv_validation
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://postgres:postgres@db:5432/cv_validation
+      # Add other backend env vars here, or use env_file
+      # SUPABASE_URL: ...
+      # SUPABASE_SERVICE_ROLE_KEY: ...
+      # OPENAI_API_KEY: ...
+      # CORS_ORIGIN: http://localhost:3000
+    depends_on:
+      - db
+    ports:
+      - "4000:4000"
+    env_file:
+      - ./backend/.env
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_BACKEND_URL: http://backend:4000
+      # Add other frontend env vars here, or use env_file
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./frontend/.env.local
+
+volumes:
+  db_data:

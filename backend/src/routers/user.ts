@@ -15,7 +15,12 @@ export const userRouter = t.router({
       skills: z.array(z.string()).optional(),
     }))
     .mutation(async ({ input }) => {
-      return db.createUser(input);
+      try {
+        return await db.createUser(input);
+      } catch (error) {
+        console.error('Error creating user:', error);
+        throw new Error('Failed to create user. Please try again.');
+      }
     }),
 
   getUserById: t.procedure
