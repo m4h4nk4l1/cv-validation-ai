@@ -253,4 +253,79 @@ export class CVValidationService {
     
     return false;
   }
+
+  /**
+   * Parse date string and calculate experience duration
+   * Handles various date formats and edge cases
+   */
+  private parseExperienceDuration(dateString: string): number {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1; // 0-indexed to 1-indexed
+    
+    // Normalize the date string
+    const normalized = dateString.toLowerCase().trim();
+    
+    // Handle "Present", "Current", "Now"
+    if (['present', 'current', 'now', 'ongoing'].includes(normalized)) {
+      return 0; // Will be calculated from start date
+    }
+    
+    // Handle patterns like "01/2023-", "2023-", "Jan 2023 -"
+    const partialYearMatch = normalized.match(/(\d{4})-/);
+    if (partialYearMatch) {
+      const startYear = parseInt(partialYearMatch[1]);
+      const monthsDiff = (currentYear - startYear) * 12 + (currentMonth - 1);
+      return Math.max(0, monthsDiff / 12);
+    }
+    
+    // Handle "2023-Present", "2023 to Present"
+    const presentMatch = normalized.match(/(\d{4})\s*[-to]\s*(present|current|now)/i);
+    if (presentMatch) {
+      const startYear = parseInt(presentMatch[1]);
+      const monthsDiff = (currentYear - startYear) * 12 + (currentMonth - 1);
+      return Math.max(0, monthsDiff / 12);
+    }
+    
+    // Handle "2023-2024", "Jan 2023 - Dec 2024"
+    const rangeMatch = normalized.match(/(\d{4})\s*[-to]\s*(\d{4})/);
+    if (rangeMatch) {
+      const startYear = parseInt(rangeMatch[1]);
+      const endYear = parseInt(rangeMatch[2]);
+      const monthsDiff = (endYear - startYear) * 12;
+      return Math.max(0, monthsDiff / 12);
+    }
+    
+    // Handle "MM/YYYY-MM/YYYY" format
+    const monthYearMatch = normalized.match(/(\d{1,2})\/(\d{4})\s*[-to]\s*(\d{1,2})\/(\d{4})/);
+    if (monthYearMatch) {
+      const startMonth = parseInt(monthYearMatch[1]);
+      const startYear = parseInt(monthYearMatch[2]);
+      const endMonth = parseInt(monthYearMatch[3]);
+      const endYear = parseInt(monthYearMatch[4]);
+      const monthsDiff = (endYear - startYear) * 12 + (endMonth - startMonth);
+      return Math.max(0, monthsDiff / 12);
+    }
+    
+    // Handle "MM/YYYY-" format (ongoing)
+    const ongoingMatch = normalized.match(/(\d{1,2})\/(\d{4})-/);
+    if (ongoingMatch) {
+      const startMonth = parseInt(ongoingMatch[1]);
+      const startYear = parseInt(ongoingMatch[2]);
+      const monthsDiff = (currentYear - startYear) * 12 + (currentMonth - startMonth);
+      return Math.max(0, monthsDiff / 12);
+    }
+    
+    // Default: try to extract year and assume 1 year if single year
+    const yearMatch = normalized.match(/(\d{4})/);
+    if (yearMatch) {
+      const year = parseInt(yearMatch[1]);
+      if (year === currentYear) {
+        return 0.5; // Assume 6 months for current year
+      }
+      return 1; // Assume 1 year for past years
+    }
+    
+    return 0; // Default fallback
+  }
 } 
